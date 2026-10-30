@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JARVIS AI</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle, #102c46, #020812 70%);
+  color: #bceeff;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 25px 16px;
+}
+
+h1 {
+  letter-spacing: 7px;
+  color: #60dfff;
+  text-shadow: 0 0 15px #00aeff;
+}
+
+.status {
+  color: #80b8ce;
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+
+.arc {
+  width: 220px;
+  height: 220px;
+  border: 3px solid #00cfff;
+  border-radius: 50%;
+  margin: 35px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 25px #00aaff,
+              inset 0 0 25px #0077aa;
+  animation: pulse 2s infinite;
+}
+
+.arc span {
+  font-size: 65px;
+  color: #70eaff;
+}
+
+@keyframes pulse {
+  50% {
+    box-shadow: 0 0 45px #00cfff,
+                inset 0 0 40px #0077aa;
+  }
+}
+
+button {
+  background: #063d5b;
+  color: #a9edff;
+  border: 1px solid #00cfff;
+  border-radius: 25px;
+  padding: 13px 22px;
+  margin: 7px;
+  font-size: 15px;
+}
+
+button:active {
+  background: #087da5;
+}
+
+input {
+  width: 90%;
+  padding: 14px;
+  margin-top: 20px;
+  border-radius: 20px;
+  border: 1px solid #00cfff;
+  background: #071b2b;
+  color: white;
+  font-size: 15px;
+}
+
+#reply {
+  margin: 25px auto;
+  max-width: 500px;
+  min-height: 65px;
+  padding: 15px;
+  border: 1px solid #126080;
+  border-radius: 12px;
+  background: #061624;
+  line-height: 1.6;
+}
+</style>
+</head>
+
+<body>
+
+<h1>J.A.R.V.I.S</h1>
+<p class="status">PERSONAL AI ASSISTANT</p>
+
+<div class="arc">
+  <span>◉</span>
+</div>
+
+<p id="status">SYSTEM ONLINE</p>
+
+<button onclick="startListening()">🎙 TALK TO JARVIS</button>
+<button onclick="stopListening()">STOP</button>
+
+<div id="reply">
+  Good day. I am JARVIS.
+  How may I assist you?
+</div>
+
+<input id="message"
+placeholder="Type a command to JARVIS...">
+
+<button onclick="sendText()">SEND COMMAND</button>
+
+<script>
+const replyBox = document.getElementById("reply");
+const statusBox = document.getElementById("status");
+
+function speak(text) {
+  window.speechSynthesis.cancel();
+
+  const speech = new SpeechSynthesisUtterance(text);
+  speech.lang = "en-IN";
+  speech.rate = 0.95;
+  speech.pitch = 0.85;
+
+  const voices = window.speechSynthesis.getVoices();
+  const voice = voices.find(v =>
+    /en-IN/i.test(v.lang)
+  ) || voices.find(v =>
+    /en/i.test(v.lang)
+  );
+
+  if (voice) speech.voice = voice;
+
+  window.speechSynthesis.speak(speech);
+}
+
+function respond(text) {
+  replyBox.innerText = text;
+  speak(text);
+}
+
+function processCommand(command) {
+  const cmd = command.toLowerCase().trim();
+
+  if (cmd.includes("hello") || cmd.includes("hi jarvis")) {
+    respond("Hello. JARVIS is ready to assist you.");
+  }
+
+  else if (cmd.includes("your name")) {
+    respond("I am JARVIS, your personal AI assistant.");
+  }
+
+  else if (cmd.includes("time")) {
+    const time = new Date().toLocaleTimeString("en-IN");
+    respond("The current time is " + time);
+  }
+
+  else if (cmd.includes("date")) {
+    const date = new Date().toLocaleDateString("en-IN");
+    respond("Today's date is " + date);
+  }
+
+  else if (cmd.includes("open youtube")) {
+    respond("Opening YouTube.");
+    window.open("https://www.youtube.com", "_blank");
+  }
+
+  else if (cmd.includes("open google")) {
+    respond("Opening Google.");
+    window.open("https://www.google.com", "_blank");
+  }
+
+  else if (cmd.includes("help")) {
+    respond("You can ask me for the time, date, or ask me to open Google and YouTube.");
+  }
+
+  else if (cmd.includes("thank you")) {
+    respond("You are welcome. Always ready to help.");
+  }
+
+  else if (cmd.includes("stop speaking")) {
+    window.speechSynthesis.cancel();
+    replyBox.innerText = "Speech stopped.";
+  }
+
+  else {
+    respond("I do not know that command yet. We will upgrade my intelligence soon.");
+  }
+}
+
+function sendText() {
+  const input = document.getElementById("message");
+  if (!input.value.trim()) return;
+
+  const command = input.value;
+  input.value = "";
+  processCommand(command);
+}
+
+const SpeechRecognition =
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition;
+
+let recognition;
+
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.lang = "en-IN";
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onstart = () => {
+    statusBox.innerText = "LISTENING...";
+  };
+
+  recognition.onresult = (event) => {
+    const command = event.results[0][0].transcript;
+    statusBox.innerText = "COMMAND RECEIVED";
+    processCommand(command);
+  };
+
+  recognition.onerror = (event) => {
+    statusBox.innerText = "VOICE ERROR: " + event.error;
+  };
+
+  recognition.onend = () => {
+    statusBox.innerText = "SYSTEM ONLINE";
+  };
+}
+
+function startListening() {
+  if (!recognition) {
+    respond("Voice recognition is not supported in this browser. Please try Chrome.");
+    return;
+  }
+
+  try {
+    recognition.start();
+  } catch (error) {
+    statusBox.innerText = "PLEASE TRY AGAIN";
+  }
+}
+
+function stopListening() {
+  if (recognition) recognition.stop();
+  window.speechSynthesis.cancel();
+  statusBox.innerText = "SYSTEM ONLINE";
+}
+
+window.speechSynthesis.onvoiceschanged = () => {};
+</script>
+
+</body>
+</html>
